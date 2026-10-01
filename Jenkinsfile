@@ -2,25 +2,19 @@ pipeline {
     agent any
 
     stages {
-        stage('Environment Audit') {
-            steps {
-                echo 'Checking Python environment status...'
-                // Using bat instead of sh for Windows support
-                bat 'pip install -r requirements.txt'
-            }
-        }
-
-        stage('Pytest Execution Check') {
-            steps {
-                echo 'Running endpoint status assertions...'
-                bat 'pytest test_app.py -v'
-            }
-        }
-
-        stage('Container Layer Assembly') {
+        stage('Container Assembly') {
             steps {
                 echo 'Compiling stateless Docker container...'
+                // Builds the container image locally using your Dockerfile
                 bat 'docker build -t aceest-fitness-api:1.0 .'
+            }
+        }
+
+        stage('Automated Testing') {
+            steps {
+                echo 'Executing Pytest validation suite INSIDE the container sandbox...'
+                // Runs the tests inside the secure, isolated container environment
+                bat 'docker run --entrypoint pytest aceest-fitness-api:1.0 test_app.py -v'
             }
         }
     }
