@@ -1,0 +1,7 @@
+# Block JetBrains IDE configurations
+.idea/
+*.iws
+
+# Block Python compiled artifacts
+__pycache__/
+*.pyc
