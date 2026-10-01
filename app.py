@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
@@ -21,6 +20,9 @@ PROGRAMS = {
     }
 }
 
+# all-lowercase collection
+PROGRAMS_LOWER = {k.lower(): v for k, v in PROGRAMS.items()}
+
 @app.route("/api/v1.0", methods=["GET"])
 def api_root():
     return jsonify({
@@ -30,7 +32,8 @@ def api_root():
             "programs": "/api/v1.0/programs",
             "health": "/api/v1.0/health",
             "weekly_workout_chart": "/api/v1.0/weekly_workout_chart",
-            "daily_nutrition_plan": "/api/v1.0/daily_nutrition_plan"
+            "daily_nutrition_plan": "/api/v1.0/daily_nutrition_plan",
+            "entire_plan": "/api/v1.0/entire_plan"
         }
     }), 200
 
@@ -48,7 +51,7 @@ def get_weekly_workout_chart():
     if not program_name:
         return jsonify({"error": "Missing 'program_name' query parameter"}), 400
 
-    program = PROGRAMS.get(program_name)
+    program = PROGRAMS_LOWER.get(program_name.lower())
     if not program:
         return jsonify({"error": f"Program '{program_name}' not found"}), 404
 
@@ -60,11 +63,26 @@ def get_daily_nutrition_plan():
     if not program_name:
         return jsonify({"error": "Missing 'program_name' query parameter"}), 400
 
-    program = PROGRAMS.get(program_name)
+    program = PROGRAMS_LOWER.get(program_name.lower())
     if not program:
         return jsonify({"error": f"Program '{program_name}' not found"}), 404
 
     return jsonify({"daily_nutrition_plan": program.get("diet")}), 200
+
+@app.route("/api/v1.0/entire_plan", methods=["GET"])
+def get_entire_plan():
+    program_name = request.args.get("program_name")
+    if not program_name:
+        return jsonify({"error": "Missing 'program_name' query parameter"}), 400
+
+    program = PROGRAMS_LOWER.get(program_name.lower())
+    if not program:
+        return jsonify({"error": f"Program '{program_name}' not found"}), 404
+
+    return jsonify({
+        "weekly_workout_chart": program.get("workout"),
+        "daily_nutrition_plan": program.get("diet")
+    }), 200
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=False)
