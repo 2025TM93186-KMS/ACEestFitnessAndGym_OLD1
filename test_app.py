@@ -1,4 +1,5 @@
 import pytest
+import sqlite3
 from app import app
 
 @pytest.fixture
@@ -7,13 +8,34 @@ def client():
     with app.test_client() as client:
         yield client
 
+@pytest.fixture(autouse=True)
+def setup_test_db():
+    conn = sqlite3.connect('aceest_fitness.db', timeout=10)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS clients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            age INTEGER,
+            height REAL,
+            weight REAL,
+            program TEXT,
+            calories INTEGER,
+            target_weight REAL,
+            target_adherence INTEGER
+        )
+    """)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    yield
+
 def test_api_v1_1_root(client):
     response = client.get('/api/v1.1')
     assert response.status_code == 200
     assert response.json['version'] == "1.1"
 
 def test_case_insensitive_workout_lookup(client):
-    # Verifies lookups with mixed case names resolve cleanly
     response = client.get('/api/v1.1/weekly_workout_chart?program_name=faT lOss (Fl)')
     assert response.status_code == 200
     assert "Zone 2 Cardio" in response.json['weekly_workout_chart']

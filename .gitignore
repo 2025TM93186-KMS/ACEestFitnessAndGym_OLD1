@@ -1,11 +1,11 @@
-# Block JetBrains IDE configurations
+# Block JetBrains IDE configurations :
 .idea/
 *.iws
 
-# Block Python compiled artifacts
+# Block Python compiled artifacts :
 __pycache__/
 *.pyc
 
-# Block DB Files
+# Block DB Files :
 *.db
 *.db-journal
