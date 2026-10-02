@@ -6,7 +6,7 @@ pipeline {
             steps {
                 echo 'Compiling stateless Docker container...'
                 // Builds the container image locally using your Dockerfile
-                bat 'docker build -t aceest-fitness-api:1.0 .'
+                bat 'docker build -t aceest-fitness-api:1.1 .'
             }
         }
 
@@ -14,7 +14,7 @@ pipeline {
             steps {
                 echo 'Executing Pytest validation suite INSIDE the container sandbox...'
                 // Runs the tests inside the secure, isolated container environment
-                bat 'docker run --entrypoint pytest aceest-fitness-api:1.0 test_app.py -v'
+                bat 'docker run --entrypoint pytest aceest-fitness-api:1.1 test_app.py -v'
             }
         }
     }

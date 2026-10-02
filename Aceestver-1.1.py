@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import sqlite3
 
 class ACEestApp:
     def __init__(self, root):
@@ -172,11 +173,64 @@ class ACEestApp:
             messagebox.showwarning("Incomplete", "Please fill client name and program.")
             return
 
-        messagebox.showinfo(
-            "Saved",
-            f"Client {self.name_var.get()} saved successfully.\n"
-            f"Adherence: {self.progress_var.get()}%"
-        )
+        self.save_client_db()
+
+
+    def save_client_db(self):
+        name = self.name_var.get().strip()
+        age = self.age_var.get()
+        weight = self.weight_var.get()
+        program = self.program_var.get()
+
+        data = self.programs[program]
+        calories = int(weight * data["calorie_factor"]) if weight > 0 else 0
+
+        height = 0.0
+        target_weight = 0.0
+        target_adherence = self.progress_var.get()
+
+        # Connect with a timeout to prevent instant locking crashes
+        with sqlite3.connect('aceest_fitness.db', timeout=10) as conn:
+            cursor = conn.cursor()
+            try:
+                # 1. Ensure table structure is initialized
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS clients (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT UNIQUE NOT NULL,
+                        age INTEGER,
+                        height REAL,
+                        weight REAL,
+                        program TEXT,
+                        calories INTEGER,
+                        target_weight REAL,
+                        target_adherence INTEGER
+                    )
+                """)
+
+                # 2. Safely inject fields into the table
+                query = """
+                    INSERT INTO clients (
+                        name, age, height, weight, program, 
+                        calories, target_weight, target_adherence
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """
+                cursor.execute(query, (
+                    name, age, height, weight, program,
+                    calories, target_weight, target_adherence
+                ))
+                messagebox.showinfo(
+                    "Saved",
+                    f"Client {self.name_var.get()} saved successfully.\n"
+                    f"Adherence: {self.progress_var.get()}%"
+                )
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Error", f"A client named '{self.name_var.get()}' already exists.")
+            except Exception as e:
+                messagebox.showerror("Database Error", f"An error occurred: {str(e)}")
+            finally:
+                # Explicitly close cursor right away to free the connection pipeline
+                cursor.close()
 
     def reset(self):
         self.name_var.set("")
