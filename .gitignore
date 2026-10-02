@@ -5,3 +5,7 @@
 # Block Python compiled artifacts
 __pycache__/
 *.pyc
+
+# Block DB Files
+*.db
+*.db-journal
